@@ -1,0 +1,37 @@
+
+1. Install XRDP
+
+sudo apt update
+sudo apt install xrdp -y
+
+2. Start and Enable XRDP Service
+
+sudo systemctl start xrdp
+sudo systemctl enable xrdp
+
+3. Install XFCE Desktop Environment
+
+sudo apt install xfce4 xfce4-goodies dbus-x11 xorgxrdp -y
+
+4. Configure XRDP to Use XFCE
+Edit the startwm.sh script:
+
+
+sudo vim /etc/xrdp/startwm.sh
+#Replace the content with:
+
+#!/bin/sh
+unset DBUS_SESSION_BUS_ADDRESS
+unset XDG_RUNTIME_DIR
+
+startxfce4
+
+sudo chmod +x /etc/xrdp/startwm.sh
+
+5. Set User Session to XFCE
+
+echo "startxfce4" > ~/.xsession
+chmod +x ~/.xsession
+
+6. Restart XRDP Service
+sudo systemctl restart xrdp
