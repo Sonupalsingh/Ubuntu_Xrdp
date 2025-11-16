@@ -1,0 +1,101 @@
+Velero Installation
+
+
+Helm =======>>>>>>>>>>>>>>>>>>>>
+
+
+Official Doc: https://helm.sh/docs/intro/install/
+
+
+Helm CLI Installation Linux:
+
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version
+
+
+
+Helm CLI Installation Windows:
+
+https://github.com/helm/helm/releases/tag/v3.17.1
+vi .bashrc
+export PATH=$PATH:/c/Program\ Files/helm/
+source ~/.bashrc
+helm version
+
+
+Velero =======>>>>>>>>>>>>>>>>>>>>
+
+
+Official Doc: https://artifacthub.io/packages/helm/vmware-tanzu/velero
+
+
+Velero CLI Installation Linux:
+
+curl -LO https://github.com/vmware-tanzu/velero/releases/download/v1.15.2/velero-v1.15.2-linux-amd64.tar.gz
+tar -xvf velero-v1.15.2-linux-amd64.tar.gz
+sudo mv velero-v1.15.2-linux-amd64/velero /usr/local/bin/
+rm -rf velero-v1.15.2-linux-amd64 velero-v1.15.2-linux-amd64.tar.gz
+
+
+
+
+
+
+Velero Helm Installation:
+
+helm repo add vmware-tanzu https://vmware-tanzu.github.io/helm-charts => Add helm chart
+helm repo update
+Run Below Command To Install Velero Helm Chart In Kubernetes Cluster:
+
+helm install velero vmware-tanzu/velero \
+
+--namespace velero --create-namespace \
+
+--set-file credentials.secretContents.cloud=/home/arjun/.aws/credentials \
+
+--set configuration.backupStorageLocation[0].name=default \
+
+--set configuration.backupStorageLocation[0].provider=aws \
+
+--set configuration.backupStorageLocation[0].bucket=findx-velero-backup-s3 \
+
+--set configuration.backupStorageLocation[0].prefix=backup \
+
+--set configuration.backupStorageLocation[0].config.region=us-east-1 \
+
+--set configuration.volumeSnapshotLocation[0].name=default \
+
+--set configuration.volumeSnapshotLocation[0].provider=aws \
+
+--set configuration.volumeSnapshotLocation[0].config.region=us-east-1 \
+
+--set initContainers[0].name=velero-plugin-for-aws \
+
+--set initContainers[0].image=velero/velero-plugin-for-aws:v1.8.2 \
+
+--set initContainers[0].volumeMounts[0].mountPath=/target \
+
+--set initContainers[0].volumeMounts[0].name=plugins
+
+
+velero backup-location get => Check if attached location is available.
+kubectl get pods -n velero => List Running Pods.
+To Backup Cluster Run Below COmmand:
+
+velero backup create minikube-cluster-backup \
+--exclude-namespaces kube-node-lease,kube-public,kube-system,velero \
+--exclude-resources daemonsets \
+--storage-location default
+
+
+velero backup get => List Backups
+velero restore create --from-backup minikube-cluster-backup => Restore Backups
+velero schedule create daily-backup --schedule="0 */12 * * *" => Scheduled Backups
+velero restore get => List Restored Backups
+velero backup delete minikube-cluster-backup => Delete Backups
+kubectl logs deployment/velero -n velero => Check Logs
+helm uninstall velero -n velero => Uninstall Velero
+
+
